@@ -7,8 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 
-const port = 5000
-
+const port = process.env.PORT || 5000;
 const uri = "mongodb+srv://nihallaskar888_db_user:EOy5ImC8mjL8kOpu@klyvex-cluster.a1rycxp.mongodb.net/?appName=klyvex-cluster";
 
 const client = new MongoClient(uri, {
