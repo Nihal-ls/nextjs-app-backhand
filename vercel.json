@@ -1,13 +1,16 @@
 {
-  "functions": {
-    "api/index.js": {
-      "runtime": "node@20.x"
-    }
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.js"
-    }
-  ]
+    "version": 2,
+    "builds": [
+        {
+            "src": "index.js",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes" : [
+        {
+            "src": "/(.*)",
+            "dest": "index.js",
+            "methods": ["GET","POST","DELETE"]
+        }
+    ]
 }
