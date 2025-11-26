@@ -1,12 +1,12 @@
 {
   "functions": {
     "api/index.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "node@18.x"
     }
   },
   "routes": [
     {
-      "src": "^/(.*)$",
+      "src": "/(.*)",
       "dest": "/api/index.js"
     }
   ]
