@@ -26,8 +26,8 @@ async function run() {
     try {
         await client.connect();
 
-        const db = client.db('klyvex_db');
-        const productCollection = db.collection('products');
+         const db = client.db('klyvex_db');
+         const productCollection = db.collection('products');
 
 
         app.get('/products', async (req, res) => {
@@ -63,7 +63,7 @@ async function run() {
         });
 
         app.listen(port, () => {
-            console.log(`Example app listening on port ${port}`)
+            console.log(`next js app listening on port ${port}`)
         })
 
         // await client.db("admin").command({ ping: 1 });
