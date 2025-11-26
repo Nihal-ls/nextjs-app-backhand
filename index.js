@@ -10,89 +10,98 @@ const port = process.env.PORT || 5000;
 
 const uri = "mongodb+srv://nihallaskar888_db_user:EOy5ImC8mjL8kOpu@klyvex-cluster.a1rycxp.mongodb.net/?appName=klyvex-cluster";
 
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
+let cachedClient = null;
+
+// Helper to get a connected client
+async function getClient() {
+    if (cachedClient && cachedClient.isConnected && cachedClient.isConnected()) {
+        return cachedClient;
     }
-});
+    cachedClient = new MongoClient(uri, {
+        serverApi: {
+            version: ServerApiVersion.v1,
+            strict: true,
+            deprecationErrors: true,
+        }
+    });
+    await cachedClient.connect();
+    return cachedClient;
+}
 
 // Root route
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-async function run() {
+// /products
+app.get('/products', async (req, res) => {
     try {
-        // Lazy connection: do NOT call client.connect() here
-        const db = client.db('klyvex_db');
-        const productCollection = db.collection('products');
-
-        // Routes
-        app.get('/products', async (req, res) => {
-            try {
-                const result = await productCollection.find().toArray();
-                res.send(result);
-            } catch (err) {
-                console.error(err);
-                res.status(500).send({ error: 'Internal Server Error' });
-            }
-        });
-
-        app.get('/latest-products', async (req, res) => {
-            try {
-                const result = await productCollection.find().limit(6).toArray();
-                res.send(result);
-            } catch (err) {
-                console.error(err);
-                res.status(500).send({ error: 'Internal Server Error' });
-            }
-        });
-
-        app.post('/add-products', async (req, res) => {
-            try {
-                const data = req.body;
-                await productCollection.insertOne(data);
-                res.send({ success: true });
-            } catch (err) {
-                console.error(err);
-                res.status(500).send({ error: 'Internal Server Error' });
-            }
-        });
-
-        app.get('/users-products', async (req, res) => {
-            try {
-                const email = req.query.email;
-                const result = await productCollection.find({ owner_email: email }).toArray();
-                res.send(result);
-            } catch (err) {
-                console.error(err);
-                res.status(500).send({ error: 'Internal Server Error' });
-            }
-        });
-
-        app.delete('/user-products/:id', async (req, res) => {
-            try {
-                const id = req.params.id;
-                const query = { _id: new ObjectId(id) };
-                const result = await productCollection.deleteOne(query);
-                res.send({ success: true, deletedCount: result.deletedCount });
-            } catch (err) {
-                console.error(err);
-                res.status(500).send({ error: 'Internal Server Error' });
-            }
-        });
-
-        // Start server
-        app.listen(port, () => {
-            console.log(`Server listening on port ${port}`);
-        });
-
-        console.log("MongoDB setup complete. Server is ready!");
+        const client = await getClient();
+        const productCollection = client.db('klyvex_db').collection('products');
+        const result = await productCollection.find().toArray();
+        res.send(result);
     } catch (err) {
         console.error(err);
+        res.status(500).send({ error: 'Internal Server Error' });
     }
-}
+});
 
-run().catch(console.dir);
+// /latest-products
+app.get('/latest-products', async (req, res) => {
+    try {
+        const client = await getClient();
+        const productCollection = client.db('klyvex_db').collection('products');
+        const result = await productCollection.find().limit(6).toArray();
+        res.send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+// /add-products
+app.post('/add-products', async (req, res) => {
+    try {
+        const client = await getClient();
+        const productCollection = client.db('klyvex_db').collection('products');
+        await productCollection.insertOne(req.body);
+        res.send({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+// /users-products
+app.get('/users-products', async (req, res) => {
+    try {
+        const client = await getClient();
+        const productCollection = client.db('klyvex_db').collection('products');
+        const email = req.query.email;
+        const result = await productCollection.find({ owner_email: email }).toArray();
+        res.send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+// /user-products/:id
+app.delete('/user-products/:id', async (req, res) => {
+    try {
+        const client = await getClient();
+        const productCollection = client.db('klyvex_db').collection('products');
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await productCollection.deleteOne(query);
+        res.send({ success: true, deletedCount: result.deletedCount });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+// Start server
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+});
